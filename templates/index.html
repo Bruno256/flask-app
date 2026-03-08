@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Revenue Tracker</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        color-scheme: light;
+      }
+      body {
+        margin: 0;
+        background: #f5f7fa;
+      }
+      main {
+        max-width: 1100px;
+        margin: 24px auto;
+        padding: 0 16px 48px;
+      }
+      h1, h2 {
+        color: #16324f;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .card {
+        background: white;
+        border-radius: 10px;
+        padding: 14px;
+        box-shadow: 0 2px 7px rgba(22, 50, 79, 0.08);
+      }
+      form {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        align-items: end;
+      }
+      label {
+        font-size: 0.84rem;
+        color: #2d4c67;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 4px;
+        border: 1px solid #d5dde7;
+        border-radius: 8px;
+        padding: 8px;
+      }
+      button {
+        border: none;
+        border-radius: 8px;
+        background: #005b96;
+        color: white;
+        padding: 10px;
+        cursor: pointer;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        text-align: left;
+        border-bottom: 1px solid #e7ecf2;
+        padding: 10px 6px;
+        font-size: 0.93rem;
+      }
+      .muted {
+        color: #6d7f91;
+      }
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      .amount {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Revenue Tracker</h1>
+      <p class="muted">Input daily sales, print PDF receipts, and monitor weekly/monthly income.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h2>Today</h2>
+          <div class="amount">${{ '%.2f'|format(summary.daily_income) }}</div>
+        </div>
+        <div class="card">
+          <h2>This Week</h2>
+          <div class="amount">${{ '%.2f'|format(summary.weekly_income) }}</div>
+        </div>
+        <div class="card">
+          <h2>This Month</h2>
+          <div class="amount">${{ '%.2f'|format(summary.monthly_income) }}</div>
+        </div>
+      </div>
+
+      <section class="card">
+        <h2>Add Daily Sale</h2>
+        <form action="/sales" method="post">
+          <label>Date
+            <input type="date" name="sale_date" value="{{ today }}" required />
+          </label>
+          <label>Customer
+            <input name="customer_name" placeholder="Customer name" />
+          </label>
+          <label>Description
+            <input name="item_description" placeholder="Product/service" />
+          </label>
+          <label>Payment Method
+            <input name="payment_method" placeholder="Cash, Card, etc." />
+          </label>
+          <label>Amount
+            <input type="number" name="amount" min="0.01" step="0.01" required />
+          </label>
+          <button type="submit">Save Sale</button>
+        </form>
+      </section>
+
+      <div class="grid" style="margin-top: 16px;">
+        <section class="card">
+          <h2>Weekly Breakdown</h2>
+          <ul>
+            {% for row in weekly_breakdown %}
+              <li>{{ row.week_label }} — ${{ '%.2f'|format(row.total) }}</li>
+            {% else %}
+              <li class="muted">No weekly data yet.</li>
+            {% endfor %}
+          </ul>
+        </section>
+
+        <section class="card">
+          <h2>Monthly Breakdown</h2>
+          <ul>
+            {% for row in monthly_breakdown %}
+              <li>{{ row.month_label }} — ${{ '%.2f'|format(row.total) }}</li>
+            {% else %}
+              <li class="muted">No monthly data yet.</li>
+            {% endfor %}
+          </ul>
+        </section>
+      </div>
+
+      <section class="card" style="margin-top: 16px;">
+        <h2>Recent Sales</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Description</th>
+              <th>Payment</th>
+              <th>Amount</th>
+              <th>Receipt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sale in sales %}
+              <tr>
+                <td>{{ sale.sale_date }}</td>
+                <td>{{ sale.customer_name }}</td>
+                <td>{{ sale.item_description }}</td>
+                <td>{{ sale.payment_method }}</td>
+                <td>${{ '%.2f'|format(sale.amount) }}</td>
+                <td><a href="/receipt/{{ sale.id }}.pdf">Download PDF</a></td>
+              </tr>
+            {% else %}
+              <tr><td class="muted" colspan="6">No sales recorded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </body>
+</html>
